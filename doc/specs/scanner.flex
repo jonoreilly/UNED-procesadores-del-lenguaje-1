@@ -25,8 +25,25 @@ import es.uned.lsi.compiler.lexical.LexicalErrorManager;
 // incluir aqui, si es necesario otras directivas
 
 %{
+
   LexicalErrorManager lexicalErrorManager = new LexicalErrorManager ();
+  
   private int commentCount = 0;
+  
+  public Token createToken(int tokenId) {
+  
+		Token token = new Token(tokenId);
+		
+        token.setLine(yyline + 1);
+        
+        token.setColumn(yycolumn + 1);
+        
+        token.setLexema(yytext());
+		
+		return token;
+  
+  }
+  
 %}  
   
 
@@ -39,28 +56,91 @@ fin = "fin"{ESPACIO_BLANCO}
 <YYINITIAL> 
 {
            			       
-    "+"                {  
-                           Token token = new Token (sym.PLUS);
-                           token.setLine (yyline + 1);
-                           token.setColumn (yycolumn + 1);
-                           token.setLexema (yytext ());
-           			       return token;
-                        }
-    
-    // incluir aqui el resto de las reglas patron - accion
-    "procedure" 	{
-			   Token token = new Token(1);
-                           token.setLine (yyline + 1);
-                           token.setColumn (yycolumn + 1);
-                           token.setLexema (yytext ());
-           			       return token;
-			}
+	"+"                	{	return createToken(sym.MAS);	}
+                    	
+	"-"                	{ 	return createToken(sym.MENOS);	}
+	
+	"*"                	{ 	return createToken(sym.POR);	}
+	
+	"/"                	{ 	return createToken(sym.ENTRE);	}
+	
+	";"                	{ 	return createToken(sym.PUNTO_Y_COMA);	}
+	
+	":"                	{  	return createToken(sym.DOS_PUNTOS);	}
+	
+	"="                	{  	return createToken(sym.IGUAL);	}
+	
+	":="                {  	return createToken(sym.ASIGNACION);	}
+	
+	".."                {  	return createToken(sym.RANGO);	}
+	
+	">"                	{  	return createToken(sym.MAYOR);	}
+	
+	"<>"                {  	return createToken(sym.DISTINTO);	}
+	
+	"("                	{  	return createToken(sym.ABRE_PARENTESIS);	}
+	
+	")"                	{  	return createToken(sym.CIERRA_PARENTESIS);	}
+	
+	"["                	{  	return createToken(sym.ABRE_VECTOR);	}
+	
+	"]"                	{  	return createToken(sym.CIERRA_VECTOR);	}
+	
+	"{"                	{  	return createToken(sym.ABRE_CORCHETE);	}
+	
+	"}"                	{  	return createToken(sym.CIERRA_CORCHETE);	}
+	
+	
+	"begin"             {  	return createToken(sym.BEGIN);	}
+	
+	"end"               {  	return createToken(sym.END);	}
+	
+	"function"          {  	return createToken(sym.FUNCTION);	}
+	
+	"procedure"         {  	return createToken(sym.PROCEDURE);	}
+	
+	"program"           {  	return createToken(sym.PROGRAM);	}
+	
+	"if"                {	return createToken(sym.IF);	}
+	
+	"then"              {  	return createToken(sym.THEN);	}
+	
+	"else"              {  	return createToken(sym.ELSE);	}
+	
+	"repeat"            {  	return createToken(sym.REPEAT);	}
+	
+	"until"             {  	return createToken(sym.UNTIL);	}
+		
+	"type"              {  	return createToken(sym.TYPE);	}
+	
+	"set"               {  	return createToken(sym.SET);	}
+	
+	"const"             {  	return createToken(sym.CONST);	}
+	
+	"var"               {  	return createToken(sym.VAR);	}
+	
+	"boolean"           {  	return createToken(sym.BOOLEAN);	}
+	
+	"integer"           {  	return createToken(sym.INTEGER);	}
+	
+	"true"              {  	return createToken(sym.TRUE);	}
+	
+	"false"             {  	return createToken(sym.FALSE);	}
+	
+	"in"                {  	return createToken(sym.IN);	}
+	
+	"of"                {  	return createToken(sym.OF);	}
+	
+	"or"                {  	return createToken(sym.OR);	}
+	
+	"write"             {  	return createToken(sym.WRITE);	}
+	
 
-   {ESPACIO_BLANCO}	{}
+   	{ESPACIO_BLANCO}	{}
 
-{fin} {}
+	{fin} 				{}
     
-    // error en caso de coincidir con ningún patrón
+    // error en caso de no coincidir con ningï¿½n patrï¿½n
 	[^]     
                         {                                               
                            LexicalError error = new LexicalError ();

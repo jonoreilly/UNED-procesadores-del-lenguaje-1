@@ -54,7 +54,45 @@ parser code {:
 
 terminal Token PLUS;
 terminal Token MINUS;
-// ...
+terminal Token MAS;
+terminal Token MENOS;
+terminal Token POR;
+terminal Token ENTRE;
+terminal Token PUNTO_Y_COMA;
+terminal Token DOS_PUNTOS;
+terminal Token IGUAL;
+terminal Token ASIGNACION;
+terminal Token RANGO;
+terminal Token MAYOR;
+terminal Token DISTINTO;
+terminal Token ABRE_PARENTESIS;
+terminal Token CIERRA_PARENTESIS;
+terminal Token ABRE_VECTOR;
+terminal Token CIERRA_VECTOR;
+terminal Token ABRE_CORCHETE;
+terminal Token CIERRA_CORCHETE;
+terminal Token BEGIN;
+terminal Token END;
+terminal Token FUNCTION;
+terminal Token PROCEDURE;
+terminal Token PROGRAM;
+terminal Token IF;
+terminal Token THEN;
+terminal Token ELSE;
+terminal Token REPEAT;
+terminal Token UNTIL;
+terminal Token TYPE;
+terminal Token SET;
+terminal Token CONST;
+terminal Token VAR;
+terminal Token BOOLEAN;
+terminal Token INTEGER;
+terminal Token TRUE;
+terminal Token FALSE;
+terminal Token IN;
+terminal Token OF;
+terminal Token OR;
+terminal Token WRITE;
 
 
 // Declaracion de no terminales
@@ -70,7 +108,7 @@ precedence left     PLUS,
                     MINUS;
 // ...
 
-// Declaración de reglas de produccion
+// Declaraciï¿½n de reglas de produccion
 
 
 start with program;
