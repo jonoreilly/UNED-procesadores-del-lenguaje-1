@@ -108,6 +108,7 @@ non terminal 			programa;
 non terminal 			cabeceraPrograma;
 non terminal 			cabeceraPrograma_1;
 non terminal 			cabeceraPrograma_2;
+non terminal 			cabeceraPrograma_3;
 non terminal 			seccionDeclaracionConstantes;
 non terminal 			declaracionConstantes;
 non terminal 			declaracionConstante;
@@ -120,13 +121,27 @@ non terminal 			seccionDeclaracionVariables;
 non terminal 			declaracionVariables;
 non terminal 			declaracionVariable;
 non terminal 			idsVariables;
+non terminal 			tipoVariable;
 non terminal 			declaracionSubprogramas;
 non terminal 			cuerpoPrograma;
+non terminal 			sentencias;
+non terminal 			sentencia;
+non terminal 			parametroWrite;
+non terminal 			referencia;
+non terminal 			expresion;
+non terminal 			sentenciaOBloque;
 
 
 // Declaracion de relaciones de precedencia
-precedence left     PLUS,
-                    MINUS;
+precedence left     MAS,
+                    MENOS,
+                    POR,
+                    ENTRE,
+                    MAYOR,
+                    DISTINTO,
+                    IN,
+                    OF,
+                    OR;
 // ...
 
 // Declaraci�n de reglas de produccion
@@ -151,17 +166,20 @@ axiom ::= programa;
 
 programa ::= PROGRAM IDENTIFICADOR PUNTO_Y_COMA cabeceraPrograma BEGIN cuerpoPrograma END PUNTO;
 
-// Si usamos producciones posiblemente vacias (x | nada) el compilador se queja. Mejor usar construcciones acomulativas (x | x y)
+// Si usamos multiples producciones seguidas posiblemente vacias (x | nada) el compilador se queja. Mejor usar construcciones acomulativas (x | x y)
 // cabeceraPrograma ::= seccionDeclaracionConstantes seccionDeclaracionTipos seccionDeclaracionVariables declaracionSubprogramas;
 
 cabeceraPrograma ::= seccionDeclaracionConstantes cabeceraPrograma_1
 					| cabeceraPrograma_1;
 
 cabeceraPrograma_1 ::= seccionDeclaracionTipos cabeceraPrograma_2
-						| cabeceraPrograma_2;
+					| cabeceraPrograma_2;
 
-cabeceraPrograma_2 ::= seccionDeclaracionVariables declaracionSubprogramas
-						| declaracionSubprogramas;
+cabeceraPrograma_2 ::= seccionDeclaracionVariables cabeceraPrograma_3
+					| cabeceraPrograma_3;
+						
+cabeceraPrograma_3 ::= declaracionSubprogramas
+					| nada;
 
 // Constantes 
 
@@ -187,25 +205,59 @@ valorTipo ::= SET OF NUMERO RANGO NUMERO;
 
 // Variables
 
-seccionDeclaracionVariables ::= TYPE declaracionVariables;
+seccionDeclaracionVariables ::= VAR declaracionVariables;
 
 declaracionVariables ::= declaracionVariable 
 						| declaracionVariable declaracionVariables;
 
-declaracionVariable ::= idsVariables DOS_PUNTOS IDENTIFICADOR PUNTO_Y_COMA; 
+declaracionVariable ::= idsVariables DOS_PUNTOS tipoVariable PUNTO_Y_COMA; 
 
 idsVariables ::= IDENTIFICADOR
 				| IDENTIFICADOR COMA idsVariables;
+				
+tipoVariable ::= IDENTIFICADOR
+		| INTEGER
+		| BOOLEAN;
 
 
 // TODO: Subprogramas
 
-declaracionSubprogramas ::= nada;
+declaracionSubprogramas ::= POR POR POR;
 
-// TODO: Cuerpo
+// Cuerpo
 
-cuerpoPrograma ::= nada;
+cuerpoPrograma ::= sentencias;
+
+sentencias ::= nada
+			| sentencia sentencias;
+			
+sentencia ::= WRITE ABRE_PARENTESIS parametroWrite CIERRA_PARENTESIS PUNTO_Y_COMA
+			| referencia ASIGNACION expresion PUNTO_Y_COMA
+			| IF ABRE_PARENTESIS CIERRA_PARENTESIS THEN sentenciaOBloque
+			| IF ABRE_PARENTESIS CIERRA_PARENTESIS THEN sentenciaOBloque ELSE sentenciaOBloque;
+
+parametroWrite ::= CADENA | expresion;
+
+referencia ::= IDENTIFICADOR
+			| IDENTIFICADOR ABRE_VECTOR expresion CIERRA_VECTOR;
 					
+expresion ::= referencia
+			| NUMERO
+			| TRUE
+			| FALSE
+			| ABRE_PARENTESIS expresion CIERRA_PARENTESIS
+			| expresion MAS expresion
+			| expresion MENOS expresion
+			| expresion POR expresion
+			| expresion ENTRE expresion
+			| expresion MAYOR expresion
+			| expresion DISTINTO expresion
+			| expresion IN expresion
+			| expresion OF expresion
+			| expresion OR expresion;
+
+sentenciaOBloque ::= sentencia
+					| BEGIN sentencias END PUNTO_Y_COMA;
 					
 					
 					
