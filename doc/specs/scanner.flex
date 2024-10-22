@@ -50,6 +50,12 @@ import es.uned.lsi.compiler.lexical.LexicalErrorManager;
 ESPACIO_BLANCO=[ \t\r\n\f]
 fin = "fin"{ESPACIO_BLANCO}
 
+NUMERO=[1-9][0-9]*|0
+
+CADENA=\".*\"
+
+COMENTARIO_EN_LINEA=//[^\r\n]*
+
 
 %%
 
@@ -135,10 +141,17 @@ fin = "fin"{ESPACIO_BLANCO}
 	
 	"write"             {  	return createToken(sym.WRITE);	}
 	
+	
+	{NUMERO}			{	return createToken(sym.NUMERO);	}
+	
+	{CADENA}			{	return createToken(sym.CADENA);	}
+	
 
    	{ESPACIO_BLANCO}	{}
 
 	{fin} 				{}
+	
+	{COMENTARIO_EN_LINEA}	{}
     
     // error en caso de no coincidir con ning�n patr�n
 	[^]     

@@ -93,6 +93,8 @@ terminal Token IN;
 terminal Token OF;
 terminal Token OR;
 terminal Token WRITE;
+terminal Token NUMERO;
+terminal Token CADENA;
 
 
 // Declaracion de no terminales
