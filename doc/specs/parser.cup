@@ -71,8 +71,6 @@ terminal Token ABRE_PARENTESIS;
 terminal Token CIERRA_PARENTESIS;
 terminal Token ABRE_VECTOR;
 terminal Token CIERRA_VECTOR;
-terminal Token ABRE_CORCHETE;
-terminal Token CIERRA_CORCHETE;
 terminal Token BEGIN;
 terminal Token END;
 terminal Token FUNCTION;

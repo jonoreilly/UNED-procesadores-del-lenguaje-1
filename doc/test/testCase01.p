@@ -4,5 +4,4 @@ program uno;
 
 begin
 	
-
 end.

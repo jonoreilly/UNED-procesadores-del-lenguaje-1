@@ -48,7 +48,6 @@ import es.uned.lsi.compiler.lexical.LexicalErrorManager;
   
 
 ESPACIO_BLANCO=[ \t\r\n\f]
-fin = "fin"{ESPACIO_BLANCO}
 
 NUMERO=[1-9][0-9]*|0
 
@@ -58,7 +57,11 @@ COMENTARIO_EN_LINEA=\/\/[^\r\n]*
 
 IDENTIFICADOR=[a-zA-Z][a-zA-Z0-9]*
 
-// TODO: comentario multi linea
+ABRE_COMENTARIO_MULTI_LINEA="{"
+
+CIERRA_COMENTARIO_MULTI_LINEA="}"
+
+%state COMENTARIO_MULTI_LINEA
 
 %%
 
@@ -98,10 +101,6 @@ IDENTIFICADOR=[a-zA-Z][a-zA-Z0-9]*
 	"["                	{  	return createToken(sym.ABRE_VECTOR);	}
 	
 	"]"                	{  	return createToken(sym.CIERRA_VECTOR);	}
-	
-	"{"                	{  	return createToken(sym.ABRE_CORCHETE);	}
-	
-	"}"                	{  	return createToken(sym.CIERRA_CORCHETE);	}
 	
 	
 	"begin"             {  	return createToken(sym.BEGIN);	}
@@ -157,15 +156,23 @@ IDENTIFICADOR=[a-zA-Z][a-zA-Z0-9]*
 	
 
    	{ESPACIO_BLANCO}	{}
-
-	{fin} 				{}
 	
 	{COMENTARIO_EN_LINEA}	{}
+	
+	
+	{ABRE_COMENTARIO_MULTI_LINEA} {
+	
+							commentCount = 1;
+	
+							yybegin(COMENTARIO_MULTI_LINEA);
+	
+						}
+	
     
     // error en caso de no coincidir con ning�n patr�n
 	[^]     
                         {                                               
-                           LexicalError error = new LexicalError ();
+                           LexicalError error = new LexicalError ("Token no identificado");
                            error.setLine (yyline + 1);
                            error.setColumn (yycolumn + 1);
                            error.setLexema (yytext ());
@@ -174,6 +181,37 @@ IDENTIFICADOR=[a-zA-Z][a-zA-Z0-9]*
     
 }
 
+
+<COMENTARIO_MULTI_LINEA>
+{
+
+	{ABRE_COMENTARIO_MULTI_LINEA} { commentCount++; }
+	
+	{CIERRA_COMENTARIO_MULTI_LINEA} {
+								
+								commentCount--;
+								
+								if (commentCount <= 0) {
+									
+									yybegin(YYINITIAL);
+									
+								}
+								
+							}
+							
+	<<EOF>>	  			{ 
+                           LexicalError error = new LexicalError ("Comentario no cerrado");
+                           error.setLine (yyline + 1);
+                           error.setColumn (yycolumn + 1);
+                           error.setLexema (yytext ());
+                           lexicalErrorManager.lexicalError (error);
+                           
+                           return null;
+                       	}
+							
+	[^] 				{}
+
+}
 
                          
 
