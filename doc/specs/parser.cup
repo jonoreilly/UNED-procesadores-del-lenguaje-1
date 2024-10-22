@@ -58,6 +58,8 @@ terminal Token MAS;
 terminal Token MENOS;
 terminal Token POR;
 terminal Token ENTRE;
+terminal Token PUNTO;
+terminal Token COMA;
 terminal Token PUNTO_Y_COMA;
 terminal Token DOS_PUNTOS;
 terminal Token IGUAL;
@@ -95,6 +97,7 @@ terminal Token OR;
 terminal Token WRITE;
 terminal Token NUMERO;
 terminal Token CADENA;
+terminal Token IDENTIFICADOR;
 
 
 // Declaracion de no terminales
@@ -102,7 +105,25 @@ terminal Token CADENA;
 
 non terminal  			program;
 non terminal Axiom		axiom;
-// ...
+non terminal 			nada;
+non terminal 			programa;
+non terminal 			cabeceraPrograma;
+non terminal 			cabeceraPrograma_1;
+non terminal 			cabeceraPrograma_2;
+non terminal 			seccionDeclaracionConstantes;
+non terminal 			declaracionConstantes;
+non terminal 			declaracionConstante;
+non terminal 			valorConstante;
+non terminal 			seccionDeclaracionTipos;
+non terminal 			declaracionTipos;
+non terminal 			declaracionTipo;
+non terminal 			valorTipo;
+non terminal 			seccionDeclaracionVariables;
+non terminal 			declaracionVariables;
+non terminal 			declaracionVariable;
+non terminal 			idsVariables;
+non terminal 			declaracionSubprogramas;
+non terminal 			cuerpoPrograma;
 
 
 // Declaracion de relaciones de precedencia
@@ -126,4 +147,75 @@ program ::=
    :};
 
 
-axiom ::= ;
+nada ::= ;
+
+axiom ::= programa;
+
+programa ::= PROGRAM IDENTIFICADOR PUNTO_Y_COMA cabeceraPrograma BEGIN cuerpoPrograma END PUNTO;
+
+// Si usamos producciones posiblemente vacias (x | nada) el compilador se queja. Mejor usar construcciones acomulativas (x | x y)
+// cabeceraPrograma ::= seccionDeclaracionConstantes seccionDeclaracionTipos seccionDeclaracionVariables declaracionSubprogramas;
+
+cabeceraPrograma ::= seccionDeclaracionConstantes cabeceraPrograma_1
+					| cabeceraPrograma_1;
+
+cabeceraPrograma_1 ::= seccionDeclaracionTipos cabeceraPrograma_2
+						| cabeceraPrograma_2;
+
+cabeceraPrograma_2 ::= seccionDeclaracionVariables declaracionSubprogramas
+						| declaracionSubprogramas;
+
+// Constantes 
+
+seccionDeclaracionConstantes ::= CONST declaracionConstantes;
+
+declaracionConstantes ::= declaracionConstante 
+						| declaracionConstante declaracionConstantes;
+
+declaracionConstante ::= IDENTIFICADOR IGUAL valorConstante PUNTO_Y_COMA; 
+
+valorConstante ::= NUMERO | TRUE | FALSE;
+
+// Tipos
+
+seccionDeclaracionTipos ::= TYPE declaracionTipos;
+
+declaracionTipos ::= declaracionTipo 
+					| declaracionTipo declaracionTipos;
+
+declaracionTipo ::= IDENTIFICADOR IGUAL valorTipo PUNTO_Y_COMA; 
+
+valorTipo ::= SET OF NUMERO RANGO NUMERO;
+
+// Variables
+
+seccionDeclaracionVariables ::= TYPE declaracionVariables;
+
+declaracionVariables ::= declaracionVariable 
+						| declaracionVariable declaracionVariables;
+
+declaracionVariable ::= idsVariables DOS_PUNTOS IDENTIFICADOR PUNTO_Y_COMA; 
+
+idsVariables ::= IDENTIFICADOR
+				| IDENTIFICADOR COMA idsVariables;
+
+
+// TODO: Subprogramas
+
+declaracionSubprogramas ::= nada;
+
+// TODO: Cuerpo
+
+cuerpoPrograma ::= nada;
+					
+					
+					
+					
+					
+					
+					
+					
+					
+					
+					
+

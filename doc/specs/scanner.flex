@@ -54,8 +54,11 @@ NUMERO=[1-9][0-9]*|0
 
 CADENA=\".*\"
 
-COMENTARIO_EN_LINEA=//[^\r\n]*
+COMENTARIO_EN_LINEA=\/\/[^\r\n]*
 
+IDENTIFICADOR=[a-zA-Z][a-zA-Z0-9]*
+
+// TODO: comentario multi linea
 
 %%
 
@@ -69,6 +72,10 @@ COMENTARIO_EN_LINEA=//[^\r\n]*
 	"*"                	{ 	return createToken(sym.POR);	}
 	
 	"/"                	{ 	return createToken(sym.ENTRE);	}
+	
+	"."                	{ 	return createToken(sym.PUNTO);	}
+	
+	","                	{ 	return createToken(sym.COMA);	}
 	
 	";"                	{ 	return createToken(sym.PUNTO_Y_COMA);	}
 	
@@ -145,6 +152,8 @@ COMENTARIO_EN_LINEA=//[^\r\n]*
 	{NUMERO}			{	return createToken(sym.NUMERO);	}
 	
 	{CADENA}			{	return createToken(sym.CADENA);	}
+	
+	{IDENTIFICADOR}		{	return createToken(sym.IDENTIFICADOR);	}
 	
 
    	{ESPACIO_BLANCO}	{}
