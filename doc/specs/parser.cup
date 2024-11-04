@@ -37,8 +37,32 @@ action code {:
 parser code {:
 	SyntaxErrorManager syntaxErrorManager = CompilerContext.getSyntaxErrorManager();
 	
+	private String getTypeName(Class clase) {
+		if (clase.isArray()) {
+			return getTypeName(clase.getComponentType()) + "[]";
+		}
+		return clase.getName();
+	}
+	
+	private String getFieldNames(Class clase) {
+		if (clase.isArray()) {
+			return "[" + getFieldNames(clase.getComponentType()) + "]";
+		}
+		return Arrays.stream(clase.getDeclaredFields()).map(f -> f.getName()).toList().toString();
+	}
+	
 	public void syntax_error(Symbol symbol)
-	{ 
+	{ 	    	
+		System.out.println("Empty array: " + getFieldNames((new Integer[]{11,12,13,14}).getClass()) + " - " + getTypeName((new Integer[]{21,22,23,24}).getClass()));
+	
+	    Arrays.stream(this.action_obj.getClass().getDeclaredFields()).forEach(field -> {
+	    	try {
+	    		System.out.println(field.getName() + ": " + field.get(this.action_obj) + " - " + getTypeName(field.get(this.action_obj).getClass()));
+    		} catch(Exception ex) {
+    			System.out.println(field.getName() + ": Error - " + ex);
+    		}
+	    });
+	    
 	    Token token = (Token) symbol.value;
 	    syntaxErrorManager.syntaxError ("Error sintactico", token);	    
 	}
@@ -52,8 +76,6 @@ parser code {:
 
 // Declaracion de terminales (Ejemplo)
 
-terminal Token PLUS;
-terminal Token MINUS;
 terminal Token MAS;
 terminal Token MENOS;
 terminal Token POR;
@@ -123,26 +145,37 @@ non terminal 			declaracionVariable;
 non terminal 			idsVariables;
 non terminal 			tipoVariable;
 non terminal 			declaracionSubprogramas;
+non terminal 			declaracionSubprograma;
+non terminal 			declaracionProcedimiento;
+non terminal 			declaracionFuncion;
+non terminal 			tipoFuncion;
+non terminal 			parametros;
+non terminal 			parametrosConTipo;
+non terminal 			idsParametros;
+non terminal 			tipoParametro;
 non terminal 			cuerpoPrograma;
 non terminal 			sentencias;
 non terminal 			sentencia;
 non terminal 			parametroWrite;
+non terminal 			sentenciaIf;
 non terminal 			referencia;
 non terminal 			expresion;
 non terminal 			sentenciaOBloque;
+non terminal 			vector;
+non terminal 			llamadaFuncion;
+non terminal 			parametrosLlamadaFuncion;
 
 
 // Declaracion de relaciones de precedencia
-precedence left     MAS,
-                    MENOS,
-                    POR,
-                    ENTRE,
-                    MAYOR,
-                    DISTINTO,
-                    IN,
-                    OF,
-                    OR;
-// ...
+
+precedence nonassoc	MAYOR, DISTINTO;
+precedence left     MAS, MENOS;
+precedence left     POR, ENTRE;
+precedence nonassoc	IN;
+precedence left		OR;
+precedence left		ABRE_VECTOR, CIERRA_VECTOR;
+precedence left		ABRE_PARENTESIS, CIERRA_PARENTESIS;
+precedence nonassoc ELSE;
 
 // Declaraci�n de reglas de produccion
 
@@ -216,13 +249,37 @@ idsVariables ::= IDENTIFICADOR
 				| IDENTIFICADOR COMA idsVariables;
 				
 tipoVariable ::= IDENTIFICADOR
-		| INTEGER
-		| BOOLEAN;
+				| INTEGER
+				| BOOLEAN;
 
+// Subprogramas
 
-// TODO: Subprogramas
+declaracionSubprogramas ::= declaracionSubprograma
+							| declaracionSubprograma declaracionSubprogramas;
 
-declaracionSubprogramas ::= POR POR POR;
+declaracionSubprograma ::= declaracionProcedimiento
+						| declaracionFuncion;
+
+declaracionProcedimiento ::= PROCEDURE IDENTIFICADOR ABRE_PARENTESIS parametros CIERRA_PARENTESIS PUNTO_Y_COMA
+							 cabeceraPrograma BEGIN cuerpoPrograma END PUNTO_Y_COMA;
+
+declaracionFuncion ::= FUNCTION IDENTIFICADOR ABRE_PARENTESIS parametros CIERRA_PARENTESIS DOS_PUNTOS tipoFuncion PUNTO_Y_COMA
+					   cabeceraPrograma BEGIN cuerpoPrograma END PUNTO_Y_COMA;
+
+tipoFuncion ::= INTEGER
+				| BOOLEAN;
+				
+parametros ::= parametrosConTipo
+				| parametrosConTipo PUNTO_Y_COMA parametros;
+				
+parametrosConTipo ::= idsParametros DOS_PUNTOS tipoParametro;
+
+idsParametros ::= IDENTIFICADOR
+				| IDENTIFICADOR COMA idsVariables;
+				
+tipoParametro ::= IDENTIFICADOR
+				| INTEGER
+				| BOOLEAN;
 
 // Cuerpo
 
@@ -233,13 +290,16 @@ sentencias ::= nada
 			
 sentencia ::= WRITE ABRE_PARENTESIS parametroWrite CIERRA_PARENTESIS PUNTO_Y_COMA
 			| referencia ASIGNACION expresion PUNTO_Y_COMA
-			| IF ABRE_PARENTESIS CIERRA_PARENTESIS THEN sentenciaOBloque
-			| IF ABRE_PARENTESIS CIERRA_PARENTESIS THEN sentenciaOBloque ELSE sentenciaOBloque;
+			| REPEAT sentencias UNTIL ABRE_PARENTESIS expresion CIERRA_PARENTESIS PUNTO_Y_COMA
+			| sentenciaIf;	
 
 parametroWrite ::= CADENA | expresion;
 
-referencia ::= IDENTIFICADOR
-			| IDENTIFICADOR ABRE_VECTOR expresion CIERRA_VECTOR;
+sentenciaIf ::= IF ABRE_PARENTESIS expresion CIERRA_PARENTESIS THEN sentenciaOBloque ELSE sentenciaOBloque  {: System.out.println("IF con ELSE"); :}
+			| IF ABRE_PARENTESIS expresion CIERRA_PARENTESIS THEN sentenciaOBloque {: System.out.println("IF sin ELSE"); :};
+
+referencia ::= IDENTIFICADOR ABRE_VECTOR expresion CIERRA_VECTOR
+			| IDENTIFICADOR;
 					
 expresion ::= referencia
 			| NUMERO
@@ -253,11 +313,24 @@ expresion ::= referencia
 			| expresion MAYOR expresion
 			| expresion DISTINTO expresion
 			| expresion IN expresion
-			| expresion OF expresion
-			| expresion OR expresion;
+			| expresion OR expresion
+			| vector
+			| llamadaFuncion;
 
 sentenciaOBloque ::= sentencia
 					| BEGIN sentencias END PUNTO_Y_COMA;
+					
+vector ::= ABRE_VECTOR CIERRA_VECTOR
+		| ABRE_VECTOR expresion RANGO expresion CIERRA_VECTOR;
+					
+llamadaFuncion ::= IDENTIFICADOR ABRE_PARENTESIS CIERRA_PARENTESIS
+				| IDENTIFICADOR ABRE_PARENTESIS parametrosLlamadaFuncion CIERRA_PARENTESIS;
+					
+parametrosLlamadaFuncion ::= expresion 
+							| expresion COMA parametrosLlamadaFuncion;
+
+
+
 					
 					
 					
