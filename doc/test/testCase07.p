@@ -17,7 +17,10 @@ begin
 	conj2:=[3..7];
 	conj3:=conj1+conj2;
 	
-	write ("IN(true):");
+	conj4 := ((conj1) IN conj2);
+	
+	write ("IN (true):");
+ 
 	if ((2 IN conj3) or (6 IN conj3)) then
 		write("true");
 	else

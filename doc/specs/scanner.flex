@@ -18,6 +18,9 @@ import es.uned.lsi.compiler.lexical.LexicalErrorManager;
 %cup
 %unicode
 
+// Este lenguaje NO es sensible a las mayusculas
+%caseless
+
 
 %implements ScannerIF
 %scanerror LexicalError
@@ -55,7 +58,7 @@ CADENA=\".*\"
 
 COMENTARIO_EN_LINEA=\/\/[^\r\n]*
 
-IDENTIFICADOR=[a-zA-Z][a-zA-Z0-9]*
+IDENTIFICADOR=[^0-9 \t\r\n\f\"\+\-\*\/\.\,\;\:\=\>\<\(\)\[\]\{\}][^ \t\r\n\f\"\+\-\*\/\.\,\;\:\=\>\<\(\)\[\]\{\}]*
 
 ABRE_COMENTARIO_MULTI_LINEA="{"
 
@@ -199,6 +202,8 @@ CIERRA_COMENTARIO_MULTI_LINEA="}"
 								
 							}
 							
+							
+	// TODO: explicar porq usamos EOF y no \r\f
 	<<EOF>>	  			{ 
                            LexicalError error = new LexicalError ("Comentario no cerrado");
                            error.setLine (yyline + 1);
