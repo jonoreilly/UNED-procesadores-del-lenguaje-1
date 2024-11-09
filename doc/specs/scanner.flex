@@ -77,8 +77,6 @@ CIERRA_COMENTARIO_MULTI_LINEA="}"
 	
 	"*"                	{ 	return createToken(sym.POR);	}
 	
-	"/"                	{ 	return createToken(sym.ENTRE);	}
-	
 	"."                	{ 	return createToken(sym.PUNTO);	}
 	
 	","                	{ 	return createToken(sym.COMA);	}
@@ -179,7 +177,7 @@ CIERRA_COMENTARIO_MULTI_LINEA="}"
                            error.setLine (yyline + 1);
                            error.setColumn (yycolumn + 1);
                            error.setLexema (yytext ());
-                           lexicalErrorManager.lexicalError (error);
+                           lexicalErrorManager.lexicalFatalError(error);
                         }
     
 }
@@ -209,9 +207,7 @@ CIERRA_COMENTARIO_MULTI_LINEA="}"
                            error.setLine (yyline + 1);
                            error.setColumn (yycolumn + 1);
                            error.setLexema (yytext ());
-                           lexicalErrorManager.lexicalError (error);
-                           
-                           return null;
+                           lexicalErrorManager.lexicalFatalError(error);
                        	}
 							
 	[^] 				{}

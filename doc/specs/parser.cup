@@ -37,34 +37,8 @@ action code {:
 parser code {:
 	SyntaxErrorManager syntaxErrorManager = CompilerContext.getSyntaxErrorManager();
 	
-	private String getTypeName(Class clase) {
-		if (clase.isArray()) {
-			return getTypeName(clase.getComponentType()) + "[]";
-		}
-		return clase.getName();
-	}
-	
-	private String getFieldNames(Class clase) {
-		if (clase.isArray()) {
-			return "[" + getFieldNames(clase.getComponentType()) + "]";
-		}
-		return Arrays.stream(clase.getDeclaredFields()).map(f -> f.getName()).toList().toString();
-	}
-	
 	public void syntax_error(Symbol symbol)
-	{ 	    	
-		/*
-		System.out.println("Empty array: " + getFieldNames((new Integer[]{11,12,13,14}).getClass()) + " - " + getTypeName((new Integer[]{21,22,23,24}).getClass()));
-	
-	    Arrays.stream(this.action_obj.getClass().getDeclaredFields()).forEach(field -> {
-	    	try {
-	    		System.out.println(field.getName() + ": " + field.get(this.action_obj) + " - " + getTypeName(field.get(this.action_obj).getClass()));
-    		} catch(Exception ex) {
-    			System.out.println(field.getName() + ": Error - " + ex);
-    		}
-	    });
-	    */
-	    
+	{ 	    		    
 	    Token token = (Token) symbol.value;
 	    syntaxErrorManager.syntaxError ("Error sintactico", token);	    
 	}
@@ -81,7 +55,6 @@ parser code {:
 terminal Token MAS;
 terminal Token MENOS;
 terminal Token POR;
-terminal Token ENTRE;
 terminal Token PUNTO;
 terminal Token COMA;
 terminal Token PUNTO_Y_COMA;
@@ -172,7 +145,7 @@ non terminal 			parametrosLlamadaFuncion;
 
 precedence nonassoc	MAYOR, DISTINTO;
 precedence left     MAS, MENOS;
-precedence left     POR, ENTRE;
+precedence left     POR;
 precedence nonassoc	IN;
 precedence left		OR;
 precedence left		ABRE_VECTOR, CIERRA_VECTOR;
@@ -199,141 +172,140 @@ nada ::= ;
 
 axiom ::= programa;
 
-programa ::= PROGRAM IDENTIFICADOR PUNTO_Y_COMA cabeceraPrograma BEGIN cuerpoPrograma END PUNTO;
+programa ::= PROGRAM IDENTIFICADOR:i PUNTO_Y_COMA cabeceraPrograma BEGIN cuerpoPrograma END PUNTO 			{: syntaxErrorManager.syntaxInfo("programa ::= ... - " + i.getLexema()); :};
 
 // Si usamos multiples producciones seguidas posiblemente vacias (x | nada) el compilador se queja. Mejor usar construcciones acomulativas (x | x y)
 // cabeceraPrograma ::= seccionDeclaracionConstantes seccionDeclaracionTipos seccionDeclaracionVariables declaracionSubprogramas;
 
-cabeceraPrograma ::= seccionDeclaracionConstantes cabeceraPrograma_1
-					| cabeceraPrograma_1;
+cabeceraPrograma ::= seccionDeclaracionConstantes cabeceraPrograma_1								{: syntaxErrorManager.syntaxInfo("cabeceraPrograma ::= seccionDeclaracionConstantes cabeceraPrograma_1"); :}
+					| cabeceraPrograma_1															{: syntaxErrorManager.syntaxInfo("cabeceraPrograma ::= cabeceraPrograma_1"); :};
 
-cabeceraPrograma_1 ::= seccionDeclaracionTipos cabeceraPrograma_2
-					| cabeceraPrograma_2;
+cabeceraPrograma_1 ::= seccionDeclaracionTipos cabeceraPrograma_2									{: syntaxErrorManager.syntaxInfo("cabeceraPrograma_1 ::= seccionDeclaracionTipos cabeceraPrograma_2"); :}
+					| cabeceraPrograma_2															{: syntaxErrorManager.syntaxInfo("cabeceraPrograma_1 ::= cabeceraPrograma_2"); :};
 
-cabeceraPrograma_2 ::= seccionDeclaracionVariables cabeceraPrograma_3
-					| cabeceraPrograma_3;
+cabeceraPrograma_2 ::= seccionDeclaracionVariables cabeceraPrograma_3								{: syntaxErrorManager.syntaxInfo("cabeceraPrograma_2 ::= seccionDeclaracionVariables cabeceraPrograma_3"); :}
+					| cabeceraPrograma_3 															{: syntaxErrorManager.syntaxInfo("cabeceraPrograma_2 ::= cabeceraPrograma_3"); :};
 						
-cabeceraPrograma_3 ::= declaracionSubprogramas
-					| nada;
+cabeceraPrograma_3 ::= declaracionSubprogramas														{: syntaxErrorManager.syntaxInfo("cabeceraPrograma_3 ::= declaracionSubprogramas"); :}
+					| nada				 															{: syntaxErrorManager.syntaxInfo("cabeceraPrograma_3 ::= nada"); :};
 
 // Constantes 
 
-seccionDeclaracionConstantes ::= CONST declaracionConstantes		{: System.out.println("seccionDeclaracionConstantes ::= CONST declaracionConstantes"); :};
+seccionDeclaracionConstantes ::= CONST declaracionConstantes										{: syntaxErrorManager.syntaxInfo("seccionDeclaracionConstantes ::= CONST declaracionConstantes"); :};
 
-declaracionConstantes ::= declaracionConstante 								{: System.out.println("declaracionConstantes ::= declaracionConstante"); :}
-						| declaracionConstante declaracionConstantes		{: System.out.println("declaracionConstantes ::= declaracionConstante declaracionConstantes"); :};
+declaracionConstantes ::= declaracionConstante 														{: syntaxErrorManager.syntaxInfo("declaracionConstantes ::= declaracionConstante"); :}
+						| declaracionConstante declaracionConstantes								{: syntaxErrorManager.syntaxInfo("declaracionConstantes ::= declaracionConstante declaracionConstantes"); :};
 
-declaracionConstante ::= IDENTIFICADOR:i IGUAL valorConstante PUNTO_Y_COMA		{: System.out.println("declaracionConstante ::= IDENTIFICADOR IGUAL valorConstante PUNTO_Y_COMA - " + i.getLexema()); :}; 
+declaracionConstante ::= IDENTIFICADOR:i IGUAL valorConstante PUNTO_Y_COMA							{: syntaxErrorManager.syntaxInfo("declaracionConstante ::= IDENTIFICADOR IGUAL valorConstante PUNTO_Y_COMA - " + i.getLexema()); :}; 
 
-valorConstante ::= NUMERO:n		{: System.out.println("valorConstante ::= NUMERO - " + n.getLexema()); :}
-				| TRUE 			{: System.out.println("valorConstante ::= TRUE"); :}
-				| FALSE			{: System.out.println("valorConstante ::= FALSE"); :};
+valorConstante ::= NUMERO:n																			{: syntaxErrorManager.syntaxInfo("valorConstante ::= NUMERO - " + n.getLexema()); :}
+				| TRUE 																				{: syntaxErrorManager.syntaxInfo("valorConstante ::= TRUE"); :}
+				| FALSE																				{: syntaxErrorManager.syntaxInfo("valorConstante ::= FALSE"); :};
 
 // Tipos
 
-seccionDeclaracionTipos ::= TYPE declaracionTipos		{: System.out.println("seccionDeclaracionTipos ::= TYPE declaracionTipos"); :};
+seccionDeclaracionTipos ::= TYPE declaracionTipos													{: syntaxErrorManager.syntaxInfo("seccionDeclaracionTipos ::= TYPE declaracionTipos"); :};
 
-declaracionTipos ::= declaracionTipo 						{: System.out.println("declaracionTipos ::= declaracionTipo"); :}
-					| declaracionTipo declaracionTipos		{: System.out.println("declaracionTipos ::= declaracionTipo declaracionTipos"); :};
+declaracionTipos ::= declaracionTipo 																{: syntaxErrorManager.syntaxInfo("declaracionTipos ::= declaracionTipo"); :}
+					| declaracionTipo declaracionTipos												{: syntaxErrorManager.syntaxInfo("declaracionTipos ::= declaracionTipo declaracionTipos"); :};
 
-declaracionTipo ::= IDENTIFICADOR:i IGUAL valorTipo PUNTO_Y_COMA		{: System.out.println("declaracionTipo ::= IDENTIFICADOR IGUAL valorTipo PUNTO_Y_COMA - " + i.getLexema()); :}; 
+declaracionTipo ::= IDENTIFICADOR:i IGUAL valorTipo PUNTO_Y_COMA									{: syntaxErrorManager.syntaxInfo("declaracionTipo ::= IDENTIFICADOR IGUAL valorTipo PUNTO_Y_COMA - " + i.getLexema()); :}; 
 
-valorTipo ::= SET OF NUMERO:n1 RANGO NUMERO:n2		{: System.out.println("valorTipo ::= SET OF NUMERO RANGO NUMERO - " + n1.getLexema() + " - " + n2.getLexema()); :};
+valorTipo ::= SET OF NUMERO:n1 RANGO NUMERO:n2														{: syntaxErrorManager.syntaxInfo("valorTipo ::= SET OF NUMERO RANGO NUMERO - " + n1.getLexema() + " - " + n2.getLexema()); :};
 
 // Variables
 
-seccionDeclaracionVariables ::= VAR declaracionVariables			{: System.out.println("seccionDeclaracionVariables ::= VAR declaracionVariables"); :};
+seccionDeclaracionVariables ::= VAR declaracionVariables											{: syntaxErrorManager.syntaxInfo("seccionDeclaracionVariables ::= VAR declaracionVariables"); :};
 
-declaracionVariables ::= declaracionVariable 							{: System.out.println("declaracionVariables ::= declaracionVariable"); :}
-						| declaracionVariable declaracionVariables		{: System.out.println("declaracionVariables ::= declaracionVariable declaracionVariables"); :};
+declaracionVariables ::= declaracionVariable 														{: syntaxErrorManager.syntaxInfo("declaracionVariables ::= declaracionVariable"); :}
+						| declaracionVariable declaracionVariables									{: syntaxErrorManager.syntaxInfo("declaracionVariables ::= declaracionVariable declaracionVariables"); :};
 
-declaracionVariable ::= idsVariables DOS_PUNTOS tipoVariable PUNTO_Y_COMA		{: System.out.println("declaracionVariable ::= idsVariables DOS_PUNTOS tipoVariable PUNTO_Y_COMA"); :}; 
+declaracionVariable ::= idsVariables DOS_PUNTOS tipoVariable PUNTO_Y_COMA							{: syntaxErrorManager.syntaxInfo("declaracionVariable ::= idsVariables DOS_PUNTOS tipoVariable PUNTO_Y_COMA"); :}; 
 
-idsVariables ::= IDENTIFICADOR:i							{: System.out.println("idsVariables ::= IDENTIFICADOR - " + i.getLexema()); :}
-				| IDENTIFICADOR:i COMA idsVariables			{: System.out.println("idsVariables ::= IDENTIFICADOR COMA idsVariables - " + i.getLexema()); :};
+idsVariables ::= IDENTIFICADOR:i																	{: syntaxErrorManager.syntaxInfo("idsVariables ::= IDENTIFICADOR - " + i.getLexema()); :}
+				| IDENTIFICADOR:i COMA idsVariables													{: syntaxErrorManager.syntaxInfo("idsVariables ::= IDENTIFICADOR COMA idsVariables - " + i.getLexema()); :};
 				
-tipoVariable ::= IDENTIFICADOR:i		{: System.out.println("tipoVariable ::= IDENTIFICADOR - " + i.getLexema()); :}
-				| INTEGER			{: System.out.println("tipoVariable ::= INTEGER"); :}
-				| BOOLEAN			{: System.out.println("tipoVariable ::= BOOLEAN"); :};
+tipoVariable ::= IDENTIFICADOR:i																	{: syntaxErrorManager.syntaxInfo("tipoVariable ::= IDENTIFICADOR - " + i.getLexema()); :}
+				| INTEGER																			{: syntaxErrorManager.syntaxInfo("tipoVariable ::= INTEGER"); :}
+				| BOOLEAN																			{: syntaxErrorManager.syntaxInfo("tipoVariable ::= BOOLEAN"); :};
 
 // Subprogramas
 
-declaracionSubprogramas ::= declaracionSubprograma								{: System.out.println("declaracionSubprogramas ::= declaracionSubprograma"); :}
-							| declaracionSubprograma declaracionSubprogramas	{: System.out.println("declaracionSubprogramas ::= declaracionSubprograma declaracionSubprogramas"); :};
+declaracionSubprogramas ::= declaracionSubprograma													{: syntaxErrorManager.syntaxInfo("declaracionSubprogramas ::= declaracionSubprograma"); :}
+							| declaracionSubprograma declaracionSubprogramas						{: syntaxErrorManager.syntaxInfo("declaracionSubprogramas ::= declaracionSubprograma declaracionSubprogramas"); :};
 
-declaracionSubprograma ::= declaracionProcedimiento		{: System.out.println("declaracionSubprograma ::= declaracionProcedimiento"); :}
-						| declaracionFuncion			{: System.out.println("declaracionSubprograma ::= declaracionFuncion"); :};
+declaracionSubprograma ::= declaracionProcedimiento													{: syntaxErrorManager.syntaxInfo("declaracionSubprograma ::= declaracionProcedimiento"); :}
+						| declaracionFuncion														{: syntaxErrorManager.syntaxInfo("declaracionSubprograma ::= declaracionFuncion"); :};
 
 declaracionProcedimiento ::= PROCEDURE IDENTIFICADOR:i ABRE_PARENTESIS parametros CIERRA_PARENTESIS PUNTO_Y_COMA
-							 cabeceraPrograma BEGIN cuerpoPrograma END PUNTO_Y_COMA		{: System.out.println("declaracionProcedimiento ::= ... - " + i.getLexema()); :};
+							 cabeceraPrograma BEGIN cuerpoPrograma END PUNTO_Y_COMA					{: syntaxErrorManager.syntaxInfo("declaracionProcedimiento ::= ... - " + i.getLexema()); :};
 
 declaracionFuncion ::= FUNCTION IDENTIFICADOR:i ABRE_PARENTESIS parametros CIERRA_PARENTESIS DOS_PUNTOS tipoFuncion PUNTO_Y_COMA
-					   cabeceraPrograma BEGIN cuerpoPrograma END PUNTO_Y_COMA		{: System.out.println("declaracionFuncion ::= ... - " + i.getLexema()); :};
+					   cabeceraPrograma BEGIN cuerpoPrograma END PUNTO_Y_COMA						{: syntaxErrorManager.syntaxInfo("declaracionFuncion ::= ... - " + i.getLexema()); :};
 
-tipoFuncion ::= INTEGER			{: System.out.println("tipoFuncion ::= INTEGER"); :}
-				| BOOLEAN		{: System.out.println("tipoFuncion ::= BOOLEAN"); :};
+tipoFuncion ::= INTEGER																				{: syntaxErrorManager.syntaxInfo("tipoFuncion ::= INTEGER"); :}
+				| BOOLEAN																			{: syntaxErrorManager.syntaxInfo("tipoFuncion ::= BOOLEAN"); :};
 				
-parametros ::= parametrosConTipo								{: System.out.println("parametros ::= parametrosConTipo"); :}
-				| parametrosConTipo PUNTO_Y_COMA parametros		{: System.out.println("parametros ::= parametrosConTipo PUNTO_Y_COMA parametros"); :};
+parametros ::= parametrosConTipo																	{: syntaxErrorManager.syntaxInfo("parametros ::= parametrosConTipo"); :}
+				| parametrosConTipo PUNTO_Y_COMA parametros											{: syntaxErrorManager.syntaxInfo("parametros ::= parametrosConTipo PUNTO_Y_COMA parametros"); :};
 				
-parametrosConTipo ::= idsParametros DOS_PUNTOS tipoParametro 	{: System.out.println("parametrosConTipo ::= idsParametros DOS_PUNTOS tipoParametro"); :};
+parametrosConTipo ::= idsParametros DOS_PUNTOS tipoParametro 										{: syntaxErrorManager.syntaxInfo("parametrosConTipo ::= idsParametros DOS_PUNTOS tipoParametro"); :};
 
-idsParametros ::= IDENTIFICADOR:i						{: System.out.println("idsParametros ::= IDENTIFICADOR - " + i.getLexema()); :}
-				| IDENTIFICADOR:i COMA idsVariables		{: System.out.println("idsParametros ::= IDENTIFICADOR COMA idsVariables - " + i.getLexema()); :};
+idsParametros ::= IDENTIFICADOR:i																	{: syntaxErrorManager.syntaxInfo("idsParametros ::= IDENTIFICADOR - " + i.getLexema()); :}
+				| IDENTIFICADOR:i COMA idsVariables													{: syntaxErrorManager.syntaxInfo("idsParametros ::= IDENTIFICADOR COMA idsVariables - " + i.getLexema()); :};
 				
-tipoParametro ::= IDENTIFICADOR:i	 {: System.out.println("tipoParametro ::= IDENTIFICADOR - " + i.getLexema()); :}
-				| INTEGER			 {: System.out.println("tipoParametro ::= INTEGER"); :}
-				| BOOLEAN			 {: System.out.println("tipoParametro ::= BOOLEAN"); :};
+tipoParametro ::= IDENTIFICADOR:i	 																{: syntaxErrorManager.syntaxInfo("tipoParametro ::= IDENTIFICADOR - " + i.getLexema()); :}
+				| INTEGER			 																{: syntaxErrorManager.syntaxInfo("tipoParametro ::= INTEGER"); :}
+				| BOOLEAN			 																{: syntaxErrorManager.syntaxInfo("tipoParametro ::= BOOLEAN"); :};
 
 // Cuerpo
 
-cuerpoPrograma ::= sentencias {: System.out.println("cuerpoPrograma ::= sentencias"); :};
+cuerpoPrograma ::= sentencias 																		{: syntaxErrorManager.syntaxInfo("cuerpoPrograma ::= sentencias"); :};
 
-sentencias ::= nada						{: System.out.println("sentencias ::= nada"); :}
-			| sentencia sentencias		{: System.out.println("sentencias ::= sentencia sentencias"); :};
+sentencias ::= nada																					{: syntaxErrorManager.syntaxInfo("sentencias ::= nada"); :}
+			| sentencia sentencias																	{: syntaxErrorManager.syntaxInfo("sentencias ::= sentencia sentencias"); :};
 			
-sentencia ::= WRITE ABRE_PARENTESIS parametroWrite CIERRA_PARENTESIS PUNTO_Y_COMA					{: System.out.println("sentencia ::= WRITE ABRE_PARENTESIS parametroWrite CIERRA_PARENTESIS PUNTO_Y_COMA"); :}
-			| referencia ASIGNACION expresion PUNTO_Y_COMA											{: System.out.println("sentencia ::= referencia ASIGNACION expresion PUNTO_Y_COMA"); :}
-			| REPEAT sentencias UNTIL ABRE_PARENTESIS expresion CIERRA_PARENTESIS PUNTO_Y_COMA		{: System.out.println("sentencia ::= REPEAT sentencias UNTIL ABRE_PARENTESIS expresion CIERRA_PARENTESIS PUNTO_Y_COMA"); :}
-			| sentenciaIf																			{: System.out.println("sentencia ::= sentenciaIf"); :}
-			| llamadaFuncion PUNTO_Y_COMA 															{: System.out.println("sentencia ::= llamadaFuncion PUNTO_Y_COMA"); :};
+sentencia ::= WRITE ABRE_PARENTESIS parametroWrite CIERRA_PARENTESIS PUNTO_Y_COMA					{: syntaxErrorManager.syntaxInfo("sentencia ::= WRITE ABRE_PARENTESIS parametroWrite CIERRA_PARENTESIS PUNTO_Y_COMA"); :}
+			| referencia ASIGNACION expresion PUNTO_Y_COMA											{: syntaxErrorManager.syntaxInfo("sentencia ::= referencia ASIGNACION expresion PUNTO_Y_COMA"); :}
+			| REPEAT sentencias UNTIL ABRE_PARENTESIS expresion CIERRA_PARENTESIS PUNTO_Y_COMA		{: syntaxErrorManager.syntaxInfo("sentencia ::= REPEAT sentencias UNTIL ABRE_PARENTESIS expresion CIERRA_PARENTESIS PUNTO_Y_COMA"); :}
+			| sentenciaIf																			{: syntaxErrorManager.syntaxInfo("sentencia ::= sentenciaIf"); :}
+			| llamadaFuncion PUNTO_Y_COMA 															{: syntaxErrorManager.syntaxInfo("sentencia ::= llamadaFuncion PUNTO_Y_COMA"); :};
 
-parametroWrite ::= CADENA:c 				{: System.out.println("parametroWrite ::= CADENA - " + c.getLexema()); :}
-				| expresion				{: System.out.println("parametroWrite ::= expresion"); :};
+parametroWrite ::= CADENA:c 																		{: syntaxErrorManager.syntaxInfo("parametroWrite ::= CADENA - " + c.getLexema()); :}
+				| expresion																			{: syntaxErrorManager.syntaxInfo("parametroWrite ::= expresion"); :};
 
-sentenciaIf ::= IF ABRE_PARENTESIS expresion CIERRA_PARENTESIS THEN sentenciaOBloque ELSE sentenciaOBloque 		{: System.out.println("sentenciaIf ::= IF ABRE_PARENTESIS expresion CIERRA_PARENTESIS THEN sentenciaOBloque ELSE sentenciaOBloque"); :}
-			| IF ABRE_PARENTESIS expresion CIERRA_PARENTESIS THEN sentenciaOBloque								{: System.out.println("sentenciaIf ::= IF ABRE_PARENTESIS expresion CIERRA_PARENTESIS THEN sentenciaOBloque"); :};
+sentenciaIf ::= IF ABRE_PARENTESIS expresion CIERRA_PARENTESIS THEN sentenciaOBloque ELSE sentenciaOBloque 			{: syntaxErrorManager.syntaxInfo("sentenciaIf ::= IF ABRE_PARENTESIS expresion CIERRA_PARENTESIS THEN sentenciaOBloque ELSE sentenciaOBloque"); :}
+			| IF ABRE_PARENTESIS expresion CIERRA_PARENTESIS THEN sentenciaOBloque									{: syntaxErrorManager.syntaxInfo("sentenciaIf ::= IF ABRE_PARENTESIS expresion CIERRA_PARENTESIS THEN sentenciaOBloque"); :};
 
-referencia ::= IDENTIFICADOR:i ABRE_VECTOR expresion CIERRA_VECTOR	{: System.out.println("referencia ::= IDENTIFICADOR ABRE_VECTOR expresion CIERRA_VECTOR - " + i.getLexema()); :}
-			| IDENTIFICADOR:i										{: System.out.println("referencia ::= IDENTIFICADOR - " + i.getLexema()); :};
+referencia ::= IDENTIFICADOR:i ABRE_VECTOR expresion CIERRA_VECTOR									{: syntaxErrorManager.syntaxInfo("referencia ::= IDENTIFICADOR ABRE_VECTOR expresion CIERRA_VECTOR - " + i.getLexema()); :}
+			| IDENTIFICADOR:i																		{: syntaxErrorManager.syntaxInfo("referencia ::= IDENTIFICADOR - " + i.getLexema()); :};
 					
-expresion ::= referencia										{: System.out.println("expresion ::= referencia"); :}
-			| NUMERO:n											{: System.out.println("expresion ::= NUMERO - " + n.getLexema()); :}
-			| TRUE												{: System.out.println("expresion ::= TRUE"); :}
-			| FALSE												{: System.out.println("expresion ::= FALSE"); :}
-			| ABRE_PARENTESIS expresion CIERRA_PARENTESIS 		{: System.out.println("expresion ::= ABRE_PARENTESIS expresion CIERRA_PARENTESIS"); :}
-			| expresion MAS expresion							{: System.out.println("expresion ::= expresion MAS expresion"); :}
-			| expresion MENOS expresion							{: System.out.println("expresion ::= expresion MENOS expresion"); :}
-			| expresion POR expresion							{: System.out.println("expresion ::= expresion POR expresion"); :}
-			| expresion ENTRE expresion							{: System.out.println("expresion ::= expresion ENTRE expresion"); :}
-			| expresion MAYOR expresion							{: System.out.println("expresion ::= expresion MAYOR expresion"); :}
-			| expresion DISTINTO expresion						{: System.out.println("expresion ::= expresion DISTINTO expresion"); :}
-			| expresion IN expresion							{: System.out.println("expresion ::= expresion IN expresion"); :}
-			| expresion OR expresion							{: System.out.println("expresion ::= expresion OR expresion"); :}
-			| vector											{: System.out.println("expresion ::= vector"); :}
-			| llamadaFuncion									{: System.out.println("expresion ::= llamadaFuncion"); :};		
+expresion ::= referencia																			{: syntaxErrorManager.syntaxInfo("expresion ::= referencia"); :}
+			| NUMERO:n																				{: syntaxErrorManager.syntaxInfo("expresion ::= NUMERO - " + n.getLexema()); :}
+			| TRUE																					{: syntaxErrorManager.syntaxInfo("expresion ::= TRUE"); :}
+			| FALSE																					{: syntaxErrorManager.syntaxInfo("expresion ::= FALSE"); :}
+			| ABRE_PARENTESIS expresion CIERRA_PARENTESIS 											{: syntaxErrorManager.syntaxInfo("expresion ::= ABRE_PARENTESIS expresion CIERRA_PARENTESIS"); :}
+			| expresion MAS expresion																{: syntaxErrorManager.syntaxInfo("expresion ::= expresion MAS expresion"); :}
+			| expresion MENOS expresion																{: syntaxErrorManager.syntaxInfo("expresion ::= expresion MENOS expresion"); :}
+			| expresion POR expresion																{: syntaxErrorManager.syntaxInfo("expresion ::= expresion POR expresion"); :}
+			| expresion MAYOR expresion																{: syntaxErrorManager.syntaxInfo("expresion ::= expresion MAYOR expresion"); :}
+			| expresion DISTINTO expresion															{: syntaxErrorManager.syntaxInfo("expresion ::= expresion DISTINTO expresion"); :}
+			| expresion IN expresion																{: syntaxErrorManager.syntaxInfo("expresion ::= expresion IN expresion"); :}
+			| expresion OR expresion																{: syntaxErrorManager.syntaxInfo("expresion ::= expresion OR expresion"); :}
+			| vector																				{: syntaxErrorManager.syntaxInfo("expresion ::= vector"); :}
+			| llamadaFuncion																		{: syntaxErrorManager.syntaxInfo("expresion ::= llamadaFuncion"); :};		
 
-sentenciaOBloque ::= sentencia									{: System.out.println("sentenciaOBloque ::= sentencia"); :}
-					| BEGIN sentencias END PUNTO_Y_COMA			{: System.out.println("sentenciaOBloque ::= BEGIN sentencias END PUNTO_Y_COMA"); :};
+sentenciaOBloque ::= sentencia																		{: syntaxErrorManager.syntaxInfo("sentenciaOBloque ::= sentencia"); :}
+					| BEGIN sentencias END PUNTO_Y_COMA												{: syntaxErrorManager.syntaxInfo("sentenciaOBloque ::= BEGIN sentencias END PUNTO_Y_COMA"); :};
 					
-vector ::= ABRE_VECTOR CIERRA_VECTOR								{: System.out.println("vector ::= ABRE_VECTOR CIERRA_VECTOR"); :}
-		| ABRE_VECTOR expresion RANGO expresion CIERRA_VECTOR		{: System.out.println("vector ::= ABRE_VECTOR expresion RANGO expresion CIERRA_VECTOR"); :};
+vector ::= ABRE_VECTOR CIERRA_VECTOR																{: syntaxErrorManager.syntaxInfo("vector ::= ABRE_VECTOR CIERRA_VECTOR"); :}
+		| ABRE_VECTOR expresion RANGO expresion CIERRA_VECTOR										{: syntaxErrorManager.syntaxInfo("vector ::= ABRE_VECTOR expresion RANGO expresion CIERRA_VECTOR"); :};
 					
-llamadaFuncion ::= IDENTIFICADOR:i ABRE_PARENTESIS CIERRA_PARENTESIS									{: System.out.println("llamadaFuncion ::= IDENTIFICADOR ABRE_PARENTESIS CIERRA_PARENTESIS - " + i.getLexema()); :}
-				| IDENTIFICADOR:i ABRE_PARENTESIS parametrosLlamadaFuncion CIERRA_PARENTESIS			{: System.out.println("llamadaFuncion ::= IDENTIFICADOR ABRE_PARENTESIS parametrosLlamadaFuncion CIERRA_PARENTESIS - " + i.getLexema()); :};
+llamadaFuncion ::= IDENTIFICADOR:i ABRE_PARENTESIS CIERRA_PARENTESIS								{: syntaxErrorManager.syntaxInfo("llamadaFuncion ::= IDENTIFICADOR ABRE_PARENTESIS CIERRA_PARENTESIS - " + i.getLexema()); :}
+				| IDENTIFICADOR:i ABRE_PARENTESIS parametrosLlamadaFuncion CIERRA_PARENTESIS		{: syntaxErrorManager.syntaxInfo("llamadaFuncion ::= IDENTIFICADOR ABRE_PARENTESIS parametrosLlamadaFuncion CIERRA_PARENTESIS - " + i.getLexema()); :};
 					
-parametrosLlamadaFuncion ::= expresion 													{: System.out.println("parametrosLlamadaFuncion ::= expresion"); :}
-							| expresion COMA parametrosLlamadaFuncion					{: System.out.println("parametrosLlamadaFuncion ::= expresion COMA parametrosLlamadaFuncion"); :};
+parametrosLlamadaFuncion ::= expresion 																{: syntaxErrorManager.syntaxInfo("parametrosLlamadaFuncion ::= expresion"); :}
+							| expresion COMA parametrosLlamadaFuncion								{: syntaxErrorManager.syntaxInfo("parametrosLlamadaFuncion ::= expresion COMA parametrosLlamadaFuncion"); :};
 
 
 
